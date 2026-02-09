@@ -50,9 +50,15 @@ git clone https://github.com/lshnls/keylamp-arduino.git
 Синий	D11
 GND	GND
 
+Схема
+
 ![arduino-with-led](img\arduino-with-led.png)
 
 Подключите собранную схему к компьютеру по USB
+
+Как выглядит на монтажной плате
+
+![arduino-with-led2](img\arduino-with-led2.JPG)
 
 ### 3. Загрузка прошивки
 
