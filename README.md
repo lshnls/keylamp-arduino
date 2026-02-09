@@ -53,13 +53,13 @@ GND	GND
 
 Схема
 
-![arduino-with-led](img\arduino-with-led.png)
+![arduino-with-led](img/arduino-with-led.png)
 
 Подключите собранную схему к компьютеру по USB
 
 Как выглядит на монтажной плате
 
-![arduino-with-led2](img\arduino-with-led2.JPG)
+![arduino-with-led2](img/arduino-with-led2.JPG)
 
 ### 3. Загрузка прошивки
 
