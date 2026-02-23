@@ -1,4 +1,4 @@
-# For WS2812B LED
+// For WS2812B LED
 
 #include <FastLED.h>
 
@@ -32,7 +32,7 @@ CRGB fadeFrom;
 // Авто-выключение
 unsigned long lastActionTime = 0; // Время последней команды
 bool isIdle = false;              // Флаг авто-выключения
-const unsigned long IDLE_TIMEOUT = 36000; // 1 час
+const unsigned long IDLE_TIMEOUT = 3600000; // 1 час
 
 int fadeSteps = 0;
 int fadeStep = 0;
@@ -76,12 +76,13 @@ void setup() {
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 
   // стартовая анимация
-  for (int i = 3; i >= 0; i--) {
+  /* for (int i = 3; i >= 0; i--) {
     startFade(currentColor, colors[i], 10, 5);
     while (isFading) updateFade();
     currentColor = colors[i];
   }
-  startFade(currentColor, colors[8], 10, 5);
+  */
+  startFade(currentColor, colors[0], 10, 5);
 
   lastActionTime = millis();
 }
@@ -104,7 +105,7 @@ void loop() {
   updateFade();
   // Авто-выключение по таймауту
   if (!isIdle && millis() - lastActionTime >= IDLE_TIMEOUT) {
-    startFade(currentColor, colors[8], 254, 100);
+    startFade(currentColor, colors[0], 254, 100);
     isIdle = true;
   }
 

@@ -1,4 +1,4 @@
-# For standart RGB LED
+// For standart RGB LED
 int pushButton = 2;
 
 struct RGB {
