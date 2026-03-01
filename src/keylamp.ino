@@ -1,47 +1,70 @@
-// For WS2812B LED
+// For standart RGB LED
+int pushButton = 2;
 
-#include <FastLED.h>
-
-#define LED_PIN     6
-#define NUM_LEDS    1
-#define LED_TYPE    WS2812B
-#define COLOR_ORDER GRB
-
-#define BUTTON_PIN  2
-
-CRGB leds[NUM_LEDS];
-
-// Массив цветов
-CRGB colors[] = {
-  CRGB::Black,          // 0
-  CRGB::Red,            // 1
-  CRGB::Green,          // 2
-  CRGB::Blue,           // 3
-  CRGB::Black,          // 4
-  CRGB::Black,          // 5
-  CRGB::Black,          // 6
-  CRGB::Black,          // 7
-  CRGB(7,7,7),       // 8 - тусклый белый
-  CRGB::White           // 9 - яркий белый
+struct RGB {
+  byte r;
+  byte g;
+  byte b;
 };
 
-CRGB currentColor = CRGB::Black;
-CRGB targetColor = CRGB::Black;
-CRGB fadeFrom;
+// Яркость 0..255
+int BRIGHT = 255;
+
+RGB colors[] = {
+  {0, 0, 0},               // 0 - черный
+  {BRIGHT, 0, 0},          // 1 - красный
+  {0, BRIGHT, 0},          // 2 - зелёный
+  {0, 0, BRIGHT},           // 3 - синий
+  {0, 0, 0},               // 4 - зарезервировано
+  {0, 0, 0},               // 5 - зарезервировано
+  {0, 0, 0},               // 6 - зарезервировано
+  {0, 0, 0},               // 7 - зарезервировано
+  {10, 10, 10},            // 8 - тусклый белый
+  {BRIGHT, BRIGHT, BRIGHT} // 9 - белый
+};
+
+// Текущий и целевой цвет
+RGB currentColor = {0, 0, 0};
+RGB targetColor  = {0, 0, 0};
+
+RGB fadeFrom; // исходный цвет для текущего fade
 
 // Авто-выключение
 unsigned long lastActionTime = 0; // Время последней команды
 bool isIdle = false;              // Флаг авто-выключения
 const unsigned long IDLE_TIMEOUT = 3600000; // 1 час
 
-int fadeSteps = 0;
-int fadeStep = 0;
+// Неблокирующий fade
+int fadeSteps = 0;           
+int fadeStep = 0;            
 int fadeDelayMs = 0;
-bool isFading = false;
-unsigned long lastFadeTime = 0;
 
-void startFade(CRGB from, CRGB to, int steps, int delayMs) {
-  fadeFrom = from;
+unsigned long lastFadeTime = 0;
+bool isFading = false;
+
+void setup() {
+  pinMode(pushButton, INPUT);
+  Serial.begin(9600);
+
+  // тестовая анимация при старте
+  for (int i = 3; i >= 0; i--) {
+    startFade(currentColor, colors[i], 10, 5);
+    while (isFading) updateFade(); // дождаться окончания fade
+    currentColor = colors[i];
+  }
+  startFade(currentColor, colors[8], 10, 5);
+
+  // Инициализация пинов PWM
+  analogWrite(9, currentColor.r);
+  analogWrite(10, currentColor.g);
+  analogWrite(11, currentColor.b);
+
+  lastActionTime = millis();
+}
+
+// Запуск плавного перехода
+void startFade(RGB from, RGB to, int steps, int delayMs) {
+  fadeFrom = from;       // сохраняем начальный цвет
   targetColor = to;
   fadeSteps = steps;
   fadeStep = 0;
@@ -50,6 +73,7 @@ void startFade(CRGB from, CRGB to, int steps, int delayMs) {
   isFading = true;
 }
 
+// Обновление цвета на каждом шаге (не блокирующее)
 void updateFade() {
   if (!isFading) return;
 
@@ -64,49 +88,38 @@ void updateFade() {
       currentColor.g = map(fadeStep, 0, fadeSteps, fadeFrom.g, targetColor.g);
       currentColor.b = map(fadeStep, 0, fadeSteps, fadeFrom.b, targetColor.b);
     }
-    leds[0] = currentColor;
-    FastLED.show();
+
+    analogWrite(9, currentColor.r);
+    analogWrite(10, currentColor.g);
+    analogWrite(11, currentColor.b);
+
     lastFadeTime = now;
   }
 }
 
-void setup() {
-  pinMode(BUTTON_PIN, INPUT);
-  Serial.begin(9600);
-  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-
-  // стартовая анимация
-  /* for (int i = 3; i >= 0; i--) {
-    startFade(currentColor, colors[i], 10, 5);
-    while (isFading) updateFade();
-    currentColor = colors[i];
-  }
-  */
-  startFade(currentColor, colors[0], 10, 5);
-
-  lastActionTime = millis();
-}
-
 void loop() {
-  // считываем Serial для управления цветом
+  // Проверка Serial
   if (Serial.available()) {
     char c = Serial.read();
     lastActionTime = millis();  // сброс таймера активности
     isIdle = false;             // выход из idle
-  
+
     if (c == '?') {
       Serial.print("ARDUINO_OK");
     }
+
     if (c >= '0' && c <= '9') {
-      startFade(currentColor, colors[c - '0'], 32, 10);
+      byte command = c - '0';
+      startFade(currentColor, colors[command], 32, 10);
     }
   }
 
+  // Обновление fade
   updateFade();
+
   // Авто-выключение по таймауту
   if (!isIdle && millis() - lastActionTime >= IDLE_TIMEOUT) {
-    startFade(currentColor, colors[0], 254, 100);
+    startFade(currentColor, colors[8], 254, 100);
     isIdle = true;
   }
-
 }
