@@ -52,7 +52,7 @@ void setup() {
     while (isFading) updateFade(); // дождаться окончания fade
     currentColor = colors[i];
   }
-  startFade(currentColor, colors[8], 10, 5);
+  startFade(currentColor, colors[0], 10, 5);
 
   // Инициализация пинов PWM
   analogWrite(9, currentColor.r);
@@ -119,7 +119,7 @@ void loop() {
 
   // Авто-выключение по таймауту
   if (!isIdle && millis() - lastActionTime >= IDLE_TIMEOUT) {
-    startFade(currentColor, colors[8], 254, 100);
+    startFade(currentColor, colors[0], 254, 100);
     isIdle = true;
   }
 }
